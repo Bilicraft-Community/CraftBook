@@ -22,6 +22,7 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.block.BlockStateHolder;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -161,7 +162,12 @@ public class Pipes extends AbstractCraftBookMechanic {
                     continue;
 
                 List<ItemStack> newItems = new ArrayList<>();
-
+                if(pipeOnlyLoadedChunks){
+                    Location relativeTo = LocationUtil.getBlockRelative(bl.getLocation(),p.getFacing(),1);
+                    if(!relativeTo.getWorld().isChunkLoaded(relativeTo.getChunk())){
+                        return;
+                    }
+                }
                 Block fac = bl.getRelative(p.getFacing());
 
                 PipePutEvent event = new PipePutEvent(bl, new ArrayList<>(filteredItems), fac);
@@ -268,8 +274,14 @@ public class Pipes extends AbstractCraftBookMechanic {
                                     }
                                 }
                             }
-
+                            if(pipeOnlyLoadedChunks){
+                                Location relativeTo = bl.getLocation().add(x,y,z);
+                                if(!relativeTo.getWorld().isChunkLoaded(relativeTo.getChunk())){
+                                    continue;
+                                }
+                            }
                             Block off = bl.getRelative(x, y, z);
+                            Material offBlockMaterial = off.getType();
 
                             if (!isValidPipeBlock(off)) continue;
 
@@ -278,22 +290,31 @@ public class Pipes extends AbstractCraftBookMechanic {
 
                             if(ItemUtil.isStainedGlass(bl.getType()) && ItemUtil.isStainedGlass(off.getType()) && bl.getType() != off.getType()) continue;
 
-                            if(off.getType() == Material.GLASS || ItemUtil.isStainedGlass(off.getType())) {
+                            if(offBlockMaterial == Material.GLASS || ItemUtil.isStainedGlass(offBlockMaterial)) {
                                 searchQueue.add(off);
-                            } else if (off.getType() == Material.GLASS_PANE || ItemUtil.isStainedGlassPane(off.getType())) {
+                            } else if (offBlockMaterial == Material.GLASS_PANE || ItemUtil.isStainedGlassPane(offBlockMaterial)) {
+                                if(pipeOnlyLoadedChunks){
+                                    Location relativeTo = off.getLocation().add(x,y,z);
+                                    if(!relativeTo.getWorld().isChunkLoaded(relativeTo.getChunk())){
+                                        continue;
+                                    }
+                                }
                                 Block offsetBlock = off.getRelative(x, y, z);
+
+                                Material offsetBlockMaterial = offsetBlock.getType();
+
                                 if (!isValidPipeBlock(offsetBlock)) continue;
                                 if (visitedPipes.contains(offsetBlock.getLocation().toVector())) continue;
-                                if(ItemUtil.isStainedGlassPane(off.getType())) {
+                                if(ItemUtil.isStainedGlassPane(offBlockMaterial)) {
                                     if((ItemUtil.isStainedGlass(bl.getType())
-                                            || ItemUtil.isStainedGlassPane(bl.getType())) && ItemUtil.getStainedColor(off.getType()) != ItemUtil
-                                            .getStainedColor(offsetBlock.getType())
-                                            || (ItemUtil.isStainedGlass(offsetBlock.getType())
-                                            || ItemUtil.isStainedGlassPane(offsetBlock.getType())) && ItemUtil.getStainedColor(off.getType()) != ItemUtil
-                                            .getStainedColor(offsetBlock.getType())) continue;
+                                            || ItemUtil.isStainedGlassPane(bl.getType())) && ItemUtil.getStainedColor(offBlockMaterial) != ItemUtil
+                                            .getStainedColor(offsetBlockMaterial)
+                                            || (ItemUtil.isStainedGlass(offsetBlockMaterial)
+                                            || ItemUtil.isStainedGlassPane(offsetBlockMaterial)) && ItemUtil.getStainedColor(offBlockMaterial) != ItemUtil
+                                            .getStainedColor(offsetBlockMaterial)) continue;
                                 }
                                 visitedPipes.add(offsetBlock.getLocation().toVector());
-                                searchQueue.add(off.getRelative(x, y, z));
+                                searchQueue.add(offsetBlock);
                             } else if(off.getType() == Material.PISTON)
                                 searchQueue.addFirst(off); //Pistons are treated with higher priority.
                         }
@@ -344,7 +365,14 @@ public class Pipes extends AbstractCraftBookMechanic {
             List<ItemStack> leftovers = new ArrayList<>();
 
             Piston p = (Piston) block.getBlockData();
+            if(pipeOnlyLoadedChunks){
+                Location relativeTo = LocationUtil.getBlockRelative(block.getLocation(),p.getFacing(),1);
+                if(!relativeTo.getWorld().isChunkLoaded(relativeTo.getChunk())){
+                    return;
+                }
+            }
             Block fac = block.getRelative(p.getFacing());
+
 
             if (fac.getType() == Material.CHEST
                     || fac.getType() == Material.TRAPPED_CHEST
@@ -498,6 +526,7 @@ public class Pipes extends AbstractCraftBookMechanic {
     private BlockStateHolder<?> pipeInsulator;
     private boolean pipeStackPerPull;
     private boolean pipeRequireSign;
+    private boolean pipeOnlyLoadedChunks;
 
     @Override
     public void loadConfiguration (YAMLProcessor config, String path) {
@@ -513,5 +542,8 @@ public class Pipes extends AbstractCraftBookMechanic {
 
         config.setComment(path + "require-sign", "Requires pipes to have a [Pipe] sign connected to them. This is the only way to require permissions to make pipes.");
         pipeRequireSign = config.getBoolean(path + "require-sign", false);
+
+        config.setComment(path + "only-loaded-chunks", "Requires pipes to have a [Pipe] sign connected to them. This is the only way to require permissions to make pipes.");
+        pipeOnlyLoadedChunks = config.getBoolean(path + "only-loaded-chunks", true);
     }
 }

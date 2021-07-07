@@ -225,6 +225,34 @@ public final class LocationUtil {
     }
 
     /**
+     * Get relative block
+     */
+    public static Location getBlockRelative(Location location, BlockFace facing, int amount) {
+        location = location.clone();
+        switch (facing){
+            case SOUTH:
+                location.add(0,0,amount);
+                break;
+            case EAST:
+                location.add(amount,0,0);
+                break;
+            case WEST:
+                location.add(-amount,0,0);
+                break;
+            case NORTH:
+                location.add(0,0,-amount);
+                break;
+            case UP:
+                location.add(0,1,0);
+                break;
+            case DOWN:
+                location.add(0,-1,0);
+                break;
+        }
+        return location;
+    }
+
+    /**
      * Gets next vertical free space
      *
      * @param block

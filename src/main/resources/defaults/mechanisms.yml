@@ -361,6 +361,7 @@ mechanics:
         insulator-block: minecraft:white_wool
         stack-per-move: true
         require-sign: false
+        only-loaded-chunks: false
     SignCopier:
         item: minecraft:ink_sac
     Snow:
