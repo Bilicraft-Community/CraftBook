@@ -29,6 +29,8 @@ import com.sk89q.craftbook.util.SignUtil;
 import com.sk89q.craftbook.util.events.SignClickEvent;
 import com.sk89q.craftbook.util.events.SourcedBlockRedstoneEvent;
 import com.sk89q.craftbook.util.exceptions.InvalidMechanismException;
+import me.lucko.helper.cooldown.Cooldown;
+import me.lucko.helper.cooldown.CooldownMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -64,7 +66,13 @@ import java.util.Set;
  */
 final class MechanicListenerAdapter implements Listener {
 
+    private CooldownMap<Location> redstoneLimiter;
+
     private Set<String> signClickTimer = new HashSet<>();
+
+    public MechanicListenerAdapter(Cooldown redstoneLimiter){
+        this.redstoneLimiter = CooldownMap.create(redstoneLimiter);
+    }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(final PlayerInteractEvent event) {
@@ -179,6 +187,9 @@ final class MechanicListenerAdapter implements Listener {
     public void onBlockRedstoneChange(BlockRedstoneEvent event) {
 
         if (!EventUtil.passesFilter(event))
+            return;
+
+        if(!redstoneLimiter.test(event.getBlock().getLocation()))
             return;
 
         handleRedstoneForBlock(event.getBlock(), event.getOldCurrent(), event.getNewCurrent());

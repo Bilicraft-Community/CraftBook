@@ -104,6 +104,7 @@ import com.sk89q.util.yaml.YAMLFormat;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.wepif.PermissionsResolverManager;
 import io.papermc.lib.PaperLib;
+import me.lucko.helper.cooldown.Cooldown;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -139,6 +140,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -419,7 +421,7 @@ public class CraftBookPlugin extends JavaPlugin {
         uuidMappings.enable();
 
         logDebugMessage("Initializing Managers!", "startup");
-        managerAdapter = new MechanicListenerAdapter();
+        managerAdapter = new MechanicListenerAdapter(Cooldown.of(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS));
 
         logDebugMessage("Initializing Permission!", "startup");
         PermissionsResolverManager.initialize(this);
@@ -1087,7 +1089,7 @@ public class CraftBookPlugin extends JavaPlugin {
         }
 
         config.load();
-        managerAdapter = new MechanicListenerAdapter();
+        managerAdapter = new MechanicListenerAdapter(Cooldown.of(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS));
         mechanicClock = new MechanicClock();
         setupCraftBook();
         registerGlobalEvents();
