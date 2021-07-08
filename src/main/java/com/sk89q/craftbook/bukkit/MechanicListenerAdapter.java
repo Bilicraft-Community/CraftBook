@@ -16,6 +16,8 @@
 
 package com.sk89q.craftbook.bukkit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.sk89q.craftbook.bukkit.util.CraftBookBukkitUtil;
 import com.sk89q.craftbook.mechanics.minecart.blocks.CartBlockMechanism;
 import com.sk89q.craftbook.mechanics.minecart.blocks.CartMechanismBlocks;
@@ -56,8 +58,10 @@ import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import java.sql.Time;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This adapter hooks a mechanic manager up to Bukkit.
@@ -66,12 +70,19 @@ import java.util.Set;
  */
 final class MechanicListenerAdapter implements Listener {
 
-    private CooldownMap<Location> redstoneLimiter;
+    private Cache<Location, Cooldown> redstoneLimtier = CacheBuilder.newBuilder()
+            .expireAfterAccess(10,TimeUnit.MINUTES)
+            .maximumSize(3000)
+            .build();
 
     private Set<String> signClickTimer = new HashSet<>();
 
-    public MechanicListenerAdapter(Cooldown redstoneLimiter){
-        this.redstoneLimiter = CooldownMap.create(redstoneLimiter);
+    private final long cdTime;
+    private final TimeUnit cdTimeUnit;
+
+    public MechanicListenerAdapter(long time, TimeUnit timeUnit){
+        cdTime = time;
+        cdTimeUnit = timeUnit;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -188,8 +199,14 @@ final class MechanicListenerAdapter implements Listener {
 
         if (!EventUtil.passesFilter(event))
             return;
+        Location location = event.getBlock().getLocation();
+        Cooldown cooldown = this.redstoneLimtier.getIfPresent(location);
+        if(cooldown == null){
+            cooldown = Cooldown.of(cdTime,cdTimeUnit);
+            this.redstoneLimtier.put(location,cooldown);
+        }
 
-        if(!redstoneLimiter.test(event.getBlock().getLocation()))
+        if(!cooldown.test())
             return;
 
         handleRedstoneForBlock(event.getBlock(), event.getOldCurrent(), event.getNewCurrent());

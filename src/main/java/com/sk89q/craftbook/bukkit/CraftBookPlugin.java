@@ -421,7 +421,7 @@ public class CraftBookPlugin extends JavaPlugin {
         uuidMappings.enable();
 
         logDebugMessage("Initializing Managers!", "startup");
-        managerAdapter = new MechanicListenerAdapter(Cooldown.of(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS));
+        managerAdapter = new MechanicListenerAdapter(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS);
 
         logDebugMessage("Initializing Permission!", "startup");
         PermissionsResolverManager.initialize(this);
@@ -1089,7 +1089,7 @@ public class CraftBookPlugin extends JavaPlugin {
         }
 
         config.load();
-        managerAdapter = new MechanicListenerAdapter(Cooldown.of(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS));
+        managerAdapter = new MechanicListenerAdapter(this.getConfiguration().config.getInt("redstone-limiter",120), TimeUnit.MILLISECONDS);
         mechanicClock = new MechanicClock();
         setupCraftBook();
         registerGlobalEvents();
