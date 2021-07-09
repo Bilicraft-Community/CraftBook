@@ -22,7 +22,7 @@ public class SpeedModifiers extends AbstractCraftBookMechanic {
 
         if (!(event.getVehicle() instanceof Minecart)) return;
 
-        if(onlyRegularMinecart && event.getVehicle().getType() == EntityType.MINECART) return;
+        if(onlyRegularMinecart && event.getVehicle().getType() != EntityType.MINECART) return;
 
         if (offRail > 0)
             ((Minecart) event.getVehicle()).setDerailedVelocityMod(new Vector(offRail, offRail, offRail));
