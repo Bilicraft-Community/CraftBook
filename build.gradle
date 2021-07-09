@@ -70,7 +70,7 @@ allprojects {
             name = 'Vault Repo'
             url = 'https://jitpack.io'
         }
-		maven {
+        maven {
             name = 'Dmulloy2 Repo'
             url = 'https://repo.dmulloy2.net/nexus/repository/public/'
         }
@@ -79,9 +79,13 @@ allprojects {
             url = 'https://repo.destroystokyo.com/repository/maven-public/'
         }
         maven {
-			name = 'bstats repo'
+            name = 'bstats repo'
             url = 'https://repo.codemc.org/repository/maven-public'
-		}
+        }
+        maven {
+            name = 'neetgames'
+            url = 'https://nexus.neetgames.com/repository/maven-releases/'
+        }
     }
 
     dependencies {
@@ -94,6 +98,7 @@ allprojects {
         compileOnly 'com.comphenix.protocol:ProtocolLib:4.5.0'
         compileOnly 'fr.neatmonster:nocheatplus:3.15.1-RC'
         compileOnly 'me.lucko:helper:5.6.8'
+        compileOnly 'com.gmail.nossr50.mcMMO:mcMMO:2.1.200'
         implementation 'com.sk89q:squirrelid:0.1.0'
         implementation "io.papermc:paperlib:1.0.2"
         implementation 'org.bstats:bstats-bukkit:1.7'
@@ -105,12 +110,12 @@ allprojects {
         testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: '1.7.4'
     }
 
-    if (JavaVersion.current().isJava8Compatible()) {
-        // Java 8 turns on doclint which we fail
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
+//    if (JavaVersion.current().isJava8Compatible()) {
+//        / / Java 8 turns on doclint which we fail
+//        tasks.withType(Javadoc) {
+//            options.addStringOption('Xdoclint:none', '-quiet')
+//        }
+//    }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
@@ -134,7 +139,7 @@ allprojects {
     jar {
         manifest {
             attributes("Class-Path": "CraftBook/WorldEdit.jar lib/WorldEdit.jar ../lib/WorldEdit.jar ../WorldEdit.jar",
-                       "CraftBook-Version": pluginVersion)
+                    "CraftBook-Version": pluginVersion)
         }
     }
 
@@ -143,9 +148,9 @@ allprojects {
         dependencies {
             include(dependency('io.papermc:paperlib'))
             include(dependency('com.sk89q:squirrelid'))
-			relocate ("org.bstats", "com.sk89q.craftbook.bukkit.bstats") {
-				include(dependency("org.bstats:bstats-bukkit:1.7"))
-			}
+            relocate("org.bstats", "com.sk89q.craftbook.bukkit.bstats") {
+                include(dependency("org.bstats:bstats-bukkit:1.7"))
+            }
         }
         relocate 'com.sk89q.squirrelid', 'com.sk89q.craftbook.util.profile'
         relocate 'io.papermc.lib', 'com.sk89q.craftbook.bukkit.paperlib'
@@ -179,7 +184,7 @@ allprojects {
     processResources {
         duplicatesStrategy DuplicatesStrategy.INCLUDE
 
-        from (sourceSets.main.resources.srcDirs) {
+        from(sourceSets.main.resources.srcDirs) {
             expand 'internalVersion': project.internalVersion
             include 'plugin.yml'
         }
